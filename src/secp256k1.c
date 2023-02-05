@@ -27,6 +27,10 @@
 # include "include/secp256k1_commitment.h"
 #endif
 
+#ifdef ENABLE_MODULE_IDENTITY
+# include "include/secp256k1_identity.h"
+#endif
+
 #ifdef ENABLE_MODULE_RANGEPROOF
 # include "include/secp256k1_rangeproof.h"
 #endif
@@ -759,6 +763,10 @@ int secp256k1_ec_privkey_tweak_neg(const secp256k1_context* ctx, unsigned char *
 
 #ifdef ENABLE_MODULE_COMMITMENT
 # include "modules/commitment/main_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_IDENTITY
+# include "modules/identity/main_impl.h"
 #endif
 
 #ifdef ENABLE_MODULE_RANGEPROOF

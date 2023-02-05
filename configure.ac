@@ -65,7 +65,7 @@ esac
 
 CFLAGS="$CFLAGS -W"
 
-warn_CFLAGS="-std=c89 -pedantic -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wno-unused-function -Wno-long-long -Wno-overlength-strings"
+warn_CFLAGS="-std=c99 -pedantic -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wno-unused-function -Wno-long-long -Wno-overlength-strings"
 saved_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS $warn_CFLAGS"
 AC_MSG_CHECKING([if ${CC} supports ${warn_CFLAGS}])
@@ -105,9 +105,9 @@ AC_ARG_ENABLE(openssl_tests,
     [enable_openssl_tests=auto])
 
 AC_ARG_ENABLE(experimental,
-    AS_HELP_STRING([--enable-experimental],[allow experimental configure options (default is no)]),
+    AS_HELP_STRING([--enable-experimental],[allow experimental configure options (default is yes)]),
     [use_experimental=$enableval],
-    [use_experimental=no])
+    [use_experimental=yes])
 
 AC_ARG_ENABLE(exhaustive_tests,
     AS_HELP_STRING([--enable-exhaustive-tests],[compile exhaustive tests (default is yes)]),
@@ -140,14 +140,19 @@ AC_ARG_ENABLE(module_recovery,
     [enable_module_recovery=no])
 
 AC_ARG_ENABLE(module_generator,
-    AS_HELP_STRING([--enable-module-generator],[enable NUMS generator module (default is no)]),
+    AS_HELP_STRING([--enable-module-generator],[enable NUMS generator module (default is yes)]),
     [enable_module_generator=$enableval],
-    [enable_module_generator=no])
+    [enable_module_generator=yes])
 
 AC_ARG_ENABLE(module_commitment,
-    AS_HELP_STRING([--enable-module-commitment],[enable Pedersen commitments module (default is no)]),
+    AS_HELP_STRING([--enable-module-commitment],[enable Pedersen commitments module (default is yes)]),
     [enable_module_commitment=$enableval],
-    [enable_module_commitment=no])
+    [enable_module_commitment=yes])
+
+AC_ARG_ENABLE(module_identities,
+    AS_HELP_STRING([--enable-module-identity],[enable Decentralized identity module (default is yes)]),
+    [enable_module_identity=$enableval],
+    [enable_module_identity=yes])
 
 AC_ARG_ENABLE(module_rangeproof,
     AS_HELP_STRING([--enable-module-rangeproof],[enable zero-knowledge range proofs module (default is no)]),
@@ -504,12 +509,16 @@ if test x"$enable_module_recovery" = x"yes"; then
   AC_DEFINE(ENABLE_MODULE_RECOVERY, 1, [Define this symbol to enable the ECDSA pubkey recovery module])
 fi
 
-if test x"$enable_module_generator" = x"yes"; then
+if test x"$enable_module_generator" = x"no"; then
   AC_DEFINE(ENABLE_MODULE_GENERATOR, 1, [Define this symbol to enable the NUMS generator module])
 fi
 
-if test x"$enable_module_commitment" = x"yes"; then
+if test x"$enable_module_commitment" = x"no"; then
   AC_DEFINE(ENABLE_MODULE_COMMITMENT, 1, [Define this symbol to enable the Pedersen commitment module])
+fi
+
+if test x"$enable_module_identity" = x"no"; then
+  AC_DEFINE(ENABLE_MODULE_IDENTITY, 1, [Define this symbol to enable the Decentralized identity module])
 fi
 
 if test x"$enable_module_rangeproof" = x"yes"; then
@@ -557,6 +566,7 @@ if test x"$enable_experimental" = x"yes"; then
   AC_MSG_NOTICE([Building ECDH module: $enable_module_ecdh])
   AC_MSG_NOTICE([Building NUMS generator module: $enable_module_generator])
   AC_MSG_NOTICE([Building Pedersen commitment module: $enable_module_commitment])
+  AC_MSG_NOTICE([Building Decentralized identity module: $enable_module_identity])
   AC_MSG_NOTICE([Building range proof module: $enable_module_rangeproof])
   AC_MSG_NOTICE([Building bulletproof module: $enable_module_bulletproof])
   AC_MSG_NOTICE([Building aggsig module: $enable_module_aggsig])
@@ -572,7 +582,11 @@ if test x"$enable_experimental" = x"yes"; then
     if test x"$enable_module_bulletproof" = x"yes"; then
       AC_MSG_ERROR([Bulletproof module requires the generator module. Use --enable-module-generator to allow.])
     fi
+    if test x"$enable_module_identity" = x"yes"; then
+      AC_MSG_ERROR([Decentralized identity module requires the generator module. Use --enable-module-generator to allow.])
+    fi
   fi
+
 
   if test x"$enable_module_commitment" != x"yes"; then
     if test x"$enable_module_rangeproof" = x"yes"; then
@@ -580,6 +594,9 @@ if test x"$enable_experimental" = x"yes"; then
     fi
     if test x"$enable_module_bulletproof" = x"yes"; then
       AC_MSG_ERROR([Bulletproof module requires the commitment module. Use --enable-module-commitment to allow.])
+    fi
+    if test x"$enable_module_identity" = x"yes"; then
+      AC_MSG_ERROR([Decentralized identity module requires the commitment module. Use --enable-module-generator to allow.])
     fi
   fi
 
@@ -600,12 +617,6 @@ else
   fi
   if test x"$set_asm" = x"arm"; then
     AC_MSG_ERROR([ARM assembly optimization is experimental. Use --enable-experimental to allow.])
-  fi
-  if test x"$enable_module_generator" = x"yes"; then
-    AC_MSG_ERROR([NUMS generator module is experimental. Use --enable-experimental to allow.])
-  fi
-  if test x"$enable_module_commitment" = x"yes"; then
-    AC_MSG_ERROR([Pedersen commitment module is experimental. Use --enable-experimental to allow.])
   fi
   if test x"$enable_module_rangeproof" = x"yes"; then
     AC_MSG_ERROR([Range proof module is experimental. Use --enable-experimental to allow.])
@@ -639,8 +650,9 @@ AM_CONDITIONAL([USE_ECMULT_STATIC_PRECOMPUTATION], [test x"$set_precomp" = x"yes
 AM_CONDITIONAL([ENABLE_MODULE_ECDH], [test x"$enable_module_ecdh" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_SCHNORRSIG], [test x"$enable_module_schnorrsig" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_RECOVERY], [test x"$enable_module_recovery" = x"yes"])
-AM_CONDITIONAL([ENABLE_MODULE_GENERATOR], [test x"$enable_module_generator" = x"yes"])
-AM_CONDITIONAL([ENABLE_MODULE_COMMITMENT], [test x"$enable_module_commitment" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_GENERATOR], [test x"$enable_module_generator" = x"no"])
+AM_CONDITIONAL([ENABLE_MODULE_COMMITMENT], [test x"$enable_module_commitment" = x"no"])
+AM_CONDITIONAL([ENABLE_MODULE_IDENTITY], [test x"$enable_module_identity" = x"no"])
 AM_CONDITIONAL([ENABLE_MODULE_RANGEPROOF], [test x"$enable_module_rangeproof" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_BULLETPROOF], [test x"$enable_module_bulletproof" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_AGGSIG], [test x"$enable_module_aggsig" = x"yes"])
@@ -659,6 +671,8 @@ dnl build modules Grin needs by default
 
 AC_DEFINE(ENABLE_MODULE_ECDH, 1)
 AC_DEFINE(ENABLE_MODULE_GENERATOR, 1)
+AC_DEFINE(ENABLE_MODULE_COMMITMENT, 1)
+AC_DEFINE(ENABLE_MODULE_IDENTITY, 1)
 AC_DEFINE(ENABLE_MODULE_RECOVERY, 1)
 AC_DEFINE(ENABLE_MODULE_RANGEPROOF, 1)
 AC_DEFINE(ENABLE_MODULE_BULLETPROOF, 1)

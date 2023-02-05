@@ -194,6 +194,11 @@ if ENABLE_MODULE_COMMITMENT
 include src/modules/commitment/Makefile.am.include
 endif
 
+if ENABLE_MODULE_IDENTITY
+include src/modules/identity/Makefile.am.include
+endif
+
+
 if ENABLE_MODULE_RANGEPROOF
 include src/modules/rangeproof/Makefile.am.include
 endif

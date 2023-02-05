@@ -5205,6 +5205,10 @@ void run_ecdsa_openssl(void) {
 # include "modules/commitment/tests_impl.h"
 #endif
 
+#ifdef ENABLE_MODULE_IDENTITY
+# include "modules/identity/tests_impl.h"
+#endif
+
 #ifdef ENABLE_MODULE_RANGEPROOF
 # include "modules/rangeproof/tests_impl.h"
 #endif
@@ -5278,7 +5282,9 @@ int main(int argc, char **argv) {
         secp256k1_rand256(run32);
         CHECK(secp256k1_context_randomize(ctx, secp256k1_rand_bits(1) ? run32 : NULL));
     }
+#define ALLTESTS  1
 
+#if (ALLTESTS == 1)
     run_rand_bits();
     run_rand_int();
     run_util_tests();
@@ -5381,6 +5387,11 @@ int main(int argc, char **argv) {
 
 #ifdef ENABLE_MODULE_SURJECTIONPROOF
     run_surjection_tests();
+#endif
+#endif
+
+#ifdef ENABLE_MODULE_IDENTITY
+    run_identity_tests();
 #endif
 
     secp256k1_rand256(run32);
