@@ -167,7 +167,7 @@ void run_identity_tests(void) {
     double verify_time;
 
     int m_list[] = {2, 4, 8, 16, 32};
-    int ring_list[] = {10, 10, 10, 10, 10};
+    int ring_list[] = {10, 20, 30, 40, 50};
 
 
     for (int l = 0; l < 5; l++) {

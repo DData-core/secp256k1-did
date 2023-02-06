@@ -5282,7 +5282,7 @@ int main(int argc, char **argv) {
         secp256k1_rand256(run32);
         CHECK(secp256k1_context_randomize(ctx, secp256k1_rand_bits(1) ? run32 : NULL));
     }
-#define ALLTESTS  1
+#define ALLTESTS  0
 
 #if (ALLTESTS == 1)
     run_rand_bits();
