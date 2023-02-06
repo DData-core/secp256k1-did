@@ -79,7 +79,6 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_identity_prove(
         const unsigned char *blind,
         const unsigned char *nonce,
         const unsigned char *digest,
-        const secp256k1_generator *value_gen,
         const secp256k1_generator *blind_gen
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(5)
 SECP256K1_ARG_NONNULL(7);
@@ -179,7 +178,6 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_unlinked_logarithmic_id
         secp256k1_unlinked_identity_pf *proof,
         int index,
         const unsigned char *blind,
-        const unsigned char *nonce,
         const unsigned char *digest,
         const unsigned char *challenge,
         int N,
@@ -243,15 +241,13 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_get_multi_generators(
  * @return
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_get_multi_gen_commitment(
-        const secp256k1_context* ctx,
         secp256k1_pedersen_commitment *com,
         const unsigned char *blind,
         const unsigned char *digests,
         const secp256k1_generator *blind_gen,
         const secp256k1_generator *gens,
         int m
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(5)
-SECP256K1_ARG_NONNULL(6);
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(5);
 
 
 /**
@@ -277,7 +273,6 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_logarithmic_multi_gen_p
         int index_of_com,
         int index_of_gen,
         const unsigned char *blind,
-        const unsigned char *nonce,
         const unsigned char *digests,
         const unsigned char *challenge,
         int m,

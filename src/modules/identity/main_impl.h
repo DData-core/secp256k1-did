@@ -32,7 +32,6 @@ int secp256k1_identity_prove(
         const unsigned char *blind,
         const unsigned char *nonce,
         const unsigned char *digest,
-        const secp256k1_generator *value_gen,
         const secp256k1_generator *blind_gen
 ) {
     secp256k1_scalar blind32;
@@ -398,7 +397,6 @@ int secp256k1_unlinked_logarithmic_zero_com_prove(
         unsigned char *proof,
         int index,
         const unsigned char *blind,
-        const unsigned char *nonce,
         int ring_size,
         int n,
         const unsigned char *challenge,
@@ -584,6 +582,7 @@ int secp256k1_unlinked_logarithmic_zero_com_prove(
 
     /* x */
     secp256k1_sha256_initialize(&sha);
+    secp256k1_sha256_write(&sha, challenge, 32);
     secp256k1_sha256_write(&sha, proof, 33 * n * 4);
     secp256k1_sha256_finalize(&sha, buf);
     secp256k1_scalar_set_b32(&x32, buf, NULL);
@@ -698,6 +697,7 @@ int secp256k1_unlinked_logarithmic_zero_com_verify(
 
     /* x */
     secp256k1_sha256_initialize(&sha);
+    secp256k1_sha256_write(&sha, challenge, 32);
     secp256k1_sha256_write(&sha, proof, 33 * n * 4);
     secp256k1_sha256_finalize(&sha, buf);
     secp256k1_scalar_set_b32(&x32, buf, NULL);
@@ -836,7 +836,6 @@ int secp256k1_unlinked_logarithmic_zero_com_verify(
     if (memcmp(LHS, RHS, 32) != 0)
         return 0;
 
-
     return 1;
 }
 
@@ -845,7 +844,6 @@ int secp256k1_unlinked_logarithmic_identity_prove(
         secp256k1_unlinked_identity_pf *proof,
         int index,
         const unsigned char *blind,
-        const unsigned char *nonce,
         const unsigned char *digest,
         const unsigned char *challenge,
         int ring_size,
@@ -854,45 +852,17 @@ int secp256k1_unlinked_logarithmic_identity_prove(
         const secp256k1_generator *value_gen,
         const secp256k1_generator *blind_gen
 ) {
-    secp256k1_pedersen_commitment J[n];
-    secp256k1_pedersen_commitment A[n];
-    secp256k1_pedersen_commitment B[n];
-    secp256k1_pedersen_commitment D[n];
     secp256k1_pedersen_commitment C[ring_size];
-    secp256k1_scalar f[n];
-    secp256k1_scalar za[n];
-    secp256k1_scalar zb[n];
-    secp256k1_scalar zd;
 
     int N = (1 << n);
 
-    secp256k1_scalar r[n];
-    secp256k1_scalar a[n];
-    secp256k1_scalar s[n];
-    secp256k1_scalar v[n];
-    secp256k1_scalar rho[n];
-    uint8_t r32[n][32];
-    uint8_t a32[n][32];
-    uint8_t s32[n][32];
-    uint8_t v32[n][32];
-    uint8_t rho32[n][32];
-    secp256k1_scalar d[n][2];
-    secp256k1_scalar p[N][n + 1];
-    secp256k1_scalar tmp1;
-    secp256k1_scalar tmp2;
-    secp256k1_scalar tmp3;
     secp256k1_ge geng;
     secp256k1_ge genh;
     secp256k1_gej hnegj;
     secp256k1_gej Cj;
-    secp256k1_gej Dj;
     secp256k1_ge tmpG;
-    secp256k1_scalar x32;
     secp256k1_scalar negdigest32;
-    secp256k1_sha256 sha;
-    unsigned char buf[32];
-    int i, l, l1, overflow, i_l, j_l;
-    int pointer = 0;
+    int i, overflow;
 
     VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
@@ -919,7 +889,7 @@ int secp256k1_unlinked_logarithmic_identity_prove(
         secp256k1_pedersen_commitment_save(&C[i], &tmpG);
     }
 
-    return secp256k1_unlinked_logarithmic_zero_com_prove(ctx, proof->data, index, blind,nonce,
+    return secp256k1_unlinked_logarithmic_zero_com_prove(ctx, proof->data, index, blind,
                                                          ring_size, n, challenge, C, value_gen, blind_gen);
 }
 
@@ -934,41 +904,17 @@ int secp256k1_unlinked_logarithmic_identity_verify(
         const secp256k1_generator *value_gen,
         const secp256k1_generator *blind_gen
 ) {
-    secp256k1_pedersen_commitment J[n];
-    secp256k1_pedersen_commitment A[n];
-    secp256k1_pedersen_commitment B[n];
-    secp256k1_pedersen_commitment D[n];
     secp256k1_pedersen_commitment C[ring_size];
-    secp256k1_scalar f[n];
-    secp256k1_scalar za[n];
-    secp256k1_scalar zb[n];
-    secp256k1_scalar zd;
 
     int N = (1 << n);
 
-    secp256k1_scalar tmpf[N];
-    secp256k1_scalar tmp2;
-    secp256k1_scalar tmp3;
-    secp256k1_scalar tmp4;
     secp256k1_ge geng;
     secp256k1_ge genh;
     secp256k1_gej hnegj;
-    secp256k1_gej tmpj1;
-    secp256k1_gej tmpj2;
-    secp256k1_gej tmpj3;
     secp256k1_gej Cj;
     secp256k1_ge tmpG;
-    secp256k1_ge tmpG2;
-    secp256k1_pedersen_commitment com;
-    secp256k1_scalar x32;
     secp256k1_scalar negdigest32;
-    secp256k1_sha256 sha;
-    unsigned char buf[32];
-    unsigned char buf_blind[32];
-    unsigned char RHS[32];
-    unsigned char LHS[32];
-    int i, l, overflow, i_l;
-    int pointer = 0;
+    int i, overflow;
 
     VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
@@ -1022,7 +968,6 @@ int secp256k1_get_multi_generators(
 
 
 int secp256k1_get_multi_gen_commitment(
-        const secp256k1_context* ctx,
         secp256k1_pedersen_commitment *com,
         const unsigned char *blind,
         const unsigned char *digests,
@@ -1030,14 +975,10 @@ int secp256k1_get_multi_gen_commitment(
         const secp256k1_generator *gens,
         int m
 ) {
-    secp256k1_sha256 sha;
     secp256k1_scalar tmp;
     secp256k1_ge tmpG;
     secp256k1_gej tmpGj;
     secp256k1_gej tmpGj1;
-    unsigned char buf[32];
-    unsigned char LHS[33];
-    unsigned char RHS[33];
     int i, overflow;
 
     secp256k1_generator_load(&tmpG, blind_gen);
@@ -1068,7 +1009,6 @@ int secp256k1_logarithmic_multi_gen_poe_prove (
         int index_of_com,
         int index_of_gen,
         const unsigned char *blind,
-        const unsigned char *nonce,
         const unsigned char *digests,
         const unsigned char *challenge,
         int m,
@@ -1095,13 +1035,13 @@ int secp256k1_logarithmic_multi_gen_poe_prove (
     secp256k1_gej Cj;
     secp256k1_gej Dj;
     secp256k1_ge tmpG;
-    secp256k1_scalar x32;
     secp256k1_scalar x032;
     secp256k1_scalar digest32[m];
     secp256k1_scalar negdigest32;
     secp256k1_sha256 sha;
     unsigned char buf[32];
-    int i, l, t, t1, l1, overflow;
+    unsigned char challenge_x[32];
+    int i, t, t1, overflow;
     int pointer = 0;
 
     VERIFY_CHECK(ctx != NULL);
@@ -1154,6 +1094,7 @@ int secp256k1_logarithmic_multi_gen_poe_prove (
     /* x_0 */
     secp256k1_sha256_initialize(&sha);
     secp256k1_sha256_write(&sha, digests + index_of_gen * 32, 32);
+    secp256k1_sha256_write(&sha, challenge, 32);
     secp256k1_sha256_write(&sha, proof->data, 33 * m);
     secp256k1_sha256_finalize(&sha, buf);
     secp256k1_scalar_set_b32(&x032, buf, NULL);
@@ -1217,9 +1158,10 @@ int secp256k1_logarithmic_multi_gen_poe_prove (
         return 0;
 
     /* ---------------------------------------------------------- */
+    secp256k1_scalar_get_b32(challenge_x, &x032);
     return secp256k1_unlinked_logarithmic_zero_com_prove(ctx, proof->data + pointer,
-                                                         index_of_com * m + index_of_gen, buf, nonce,
-                                                         ring_size * m, n, challenge, C, value_gen, blind_gen);
+                                                         index_of_com * m + index_of_gen, buf,
+                                                         ring_size * m, n, challenge_x, C, value_gen, blind_gen);
 
 }
 
@@ -1249,11 +1191,11 @@ int secp256k1_logarithmic_multi_gen_poe_verify(
     secp256k1_gej Dj;
     secp256k1_gej Cj;
     secp256k1_ge tmpG1;
-    secp256k1_scalar x32;
     secp256k1_scalar x032;
     secp256k1_scalar negdigest32;
     secp256k1_sha256 sha;
     unsigned char buf[32];
+    unsigned char challenge_x[32];
     int i, t, t1, overflow;
     int pointer = 0;
 
@@ -1286,6 +1228,7 @@ int secp256k1_logarithmic_multi_gen_poe_verify(
     /* x_0 */
     secp256k1_sha256_initialize(&sha);
     secp256k1_sha256_write(&sha, digest, 32);
+    secp256k1_sha256_write(&sha, challenge, 32);
     secp256k1_sha256_write(&sha, proof->data, 33 * m);
     secp256k1_sha256_finalize(&sha, buf);
     secp256k1_scalar_set_b32(&x032, buf, NULL);
@@ -1342,8 +1285,9 @@ int secp256k1_logarithmic_multi_gen_poe_verify(
         }
     }
 
+    secp256k1_scalar_get_b32(challenge_x, &x032);
     return secp256k1_unlinked_logarithmic_zero_com_verify(ctx, proof->data + pointer,
-                                                          ring_size * m, n, challenge, C, value_gen, blind_gen);
+                                                          ring_size * m, n, challenge_x, C, value_gen, blind_gen);
 }
 
 #endif /* RAHAS_SECP256K1_MAIN_IMPL_H */
